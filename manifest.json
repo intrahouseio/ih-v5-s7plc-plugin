@@ -1,0 +1,6 @@
+{
+  "name": "s7plc",
+  "module": "index.js",
+  "single": 0,
+  "restartOnChannelsChange": 0
+}

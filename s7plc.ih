@@ -1,0 +1,6 @@
+{
+    "id":"s7plc",
+    "description":"S7 PLC",
+    "cross":true,
+	"version":"5.0.0"
+}
