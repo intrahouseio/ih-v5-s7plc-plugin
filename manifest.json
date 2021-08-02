@@ -2,5 +2,11 @@
   "name": "s7plc",
   "module": "index.js",
   "single": 0,
-  "restartOnChannelsChange": 0
+  "restartOnChannelsChange": 0,
+
+  "default_channel": {
+    "r": 1,
+    "chan": "VAR1",
+    "address": "DB1.REAL0"
+  }
 }

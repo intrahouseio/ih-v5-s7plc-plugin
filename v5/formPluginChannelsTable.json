@@ -10,13 +10,11 @@
       "prop": "unitchannelsTable",
 
       "columns": [
-        { "prop": "chan", "title": "$Channel",  "type": "link", "command":"forward",  "width": 250 },
-        { "prop": "desc", "title": "", "type": "text",  "width": 50  },
-        { "prop": "period", "title": "$Period", "type": "input",  "width": 64 },
-        { "prop": "min", "title": "Min", "type": "input",  "width": 50  },
-        { "prop": "max", "title": "Max",  "type": "input",  "width": 50  },
-        { "prop": "delta", "title": "$Delta", "type": "input",  "width": 64 },
-        { "prop": "random", "title": "$Random", "type": "cb",  "width": 64 },         
+        { "prop": "chan", "title": "Channel ID",  "type": "link", "command":"forward",  "width": 250 },
+        { "prop": "address", "title": "Address", "type": "input",  "width": 150 },
+        { "prop": "r", "title": "Read", "type": "cb",  "width": 100 },
+        { "prop": "w", "title": "Write", "type": "cb",  "width": 100 },
+       
         { "prop": "did", "title": "$Device",  "type": "link", "command":"forward",  "width": 250  },
         { "prop": "prop", "title": "$DeviceProperty", "type": "text",  "width": 64 },
         { "prop": "realtime_chan_val", "title": "Канал: значение", "type": "text",  "width": 64 },
