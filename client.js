@@ -21,24 +21,21 @@ module.exports = {
       this.conn = new S7(plugin);
     } else {
       const S7 = require('nodes7');
-      this.conn = new S7();
+      this.conn = new S7({silent:true });
     }
-    this.conn.setTranslationCB(tag => variables[tag]);
+    
     this.addItems(this.plugin.channels);
     
   },
 
   addItems(channels) {
-    console.log("Channels in addItems", channels.data);
+    variables = {};
     // Заполнить variables из каналов
-    /*channels.data.forEach((item)=> {
-      variables[item.id] = item.address;
-    });*/
     for (var i=0; i < channels.data.length; i++) {
       variables[channels.data[i].id] = channels.data[i].address;
-      
       // делаем что-нибудь с item
     }
+    this.conn.setTranslationCB(tag => variables[tag]);  
     this.plugin.log('Variables mapping: ' + util.inspect(variables));
     // Заполнить read pool для readAll
     this.conn.addItems(Object.keys(variables));
@@ -46,7 +43,13 @@ module.exports = {
 
   removeItems() {
     const vars = Object.keys(variables);
+    //console.log('Removed vars', vars);
+    try {
     this.conn.removeItems(vars);
+    
+  } catch (e) {
+    plugin.log('ERROR onChange: ' + util.inspect(e));
+  }
   },
 
   connect() {

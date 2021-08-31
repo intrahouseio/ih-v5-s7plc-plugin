@@ -103,7 +103,7 @@ async function write() {
     toWrite = [];
     
     await client.write(items, values);
-    console.log('Write completed', items, values);
+    plugin.log('Write completed', items, values);
   } catch (e) {
     plugin.log('Write ERROR: ' + util.inspect(e));
   }
@@ -116,7 +116,7 @@ async function write() {
  * @param {Array of Objects} - message.data - массив команд
  */
 plugin.onAct(message => {
-  console.log('Write recieve', message);
+  //console.log('Write recieve', message);
   plugin.log('ACT data=' + util.inspect(message.data));
   
   if (!message.data) return;
@@ -130,12 +130,17 @@ plugin.onAct(message => {
 });
 
 plugin.channels.onChange(async function () {
-  clearTimeout(nextTimer);
-  client.removeItems();
-  const channels = await plugin.channels.get();
+  try {
+    clearTimeout(nextTimer);
+    client.removeItems();
+    plugin.channels.data = await plugin.channels.get(); 
+    
+    client.addItems(plugin.channels);
+    sendNext();
+    } catch (e) {
+      plugin.log('ERROR onChange: ' + util.inspect(e));
+    }
   
-  client.addItems(channels);
-  sendNext();
 });
 
 // Завершение работы
