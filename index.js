@@ -103,6 +103,7 @@ async function write() {
     toWrite = [];
     
     await client.write(items, values);
+    console.log('Write completed', items, values);
   } catch (e) {
     plugin.log('Write ERROR: ' + util.inspect(e));
   }
@@ -115,7 +116,9 @@ async function write() {
  * @param {Array of Objects} - message.data - массив команд
  */
 plugin.onAct(message => {
+  console.log('Write recieve', message);
   plugin.log('ACT data=' + util.inspect(message.data));
+  
   if (!message.data) return;
   message.data.forEach(item => {
     toWrite.push({id:item.id, value:item.value});
@@ -123,6 +126,15 @@ plugin.onAct(message => {
   // Попытаться отправить на контроллер
   // Сбросить таймер поллинга, чтобы не случилось наложения
   clearTimeout(nextTimer);
+  sendNext();
+});
+
+plugin.channels.onChange(async function () {
+  clearTimeout(nextTimer);
+  client.removeItems();
+  const channels = await plugin.channels.get();
+  
+  client.addItems(channels);
   sendNext();
 });
 

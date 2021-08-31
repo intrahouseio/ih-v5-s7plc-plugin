@@ -4,10 +4,10 @@
 
 const util = require('util');
 
-// const S7 = require('nodes7');
+const S7 = require('nodes7');
 // const S7 = require('./lib/fakeS7');
 
-const variables = {};
+let variables = {};
 
 module.exports = {
   conn: '',
@@ -23,17 +23,30 @@ module.exports = {
       const S7 = require('nodes7');
       this.conn = new S7();
     }
-
     this.conn.setTranslationCB(tag => variables[tag]);
+    this.addItems(this.plugin.channels);
+    
+  },
 
+  addItems(channels) {
+    console.log("Channels in addItems", channels.data);
     // Заполнить variables из каналов
-    this.plugin.channels.data.forEach(item => {
+    /*channels.data.forEach((item)=> {
       variables[item.id] = item.address;
-    });
+    });*/
+    for (var i=0; i < channels.data.length; i++) {
+      variables[channels.data[i].id] = channels.data[i].address;
+      
+      // делаем что-нибудь с item
+    }
     this.plugin.log('Variables mapping: ' + util.inspect(variables));
-
     // Заполнить read pool для readAll
     this.conn.addItems(Object.keys(variables));
+  },
+
+  removeItems() {
+    const vars = Object.keys(variables);
+    this.conn.removeItems(vars);
   },
 
   connect() {
