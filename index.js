@@ -3,7 +3,7 @@
  */
 const util = require('util');
 
-const plugin = require('ih-plugin-api')();
+// const plugin = require('ih-plugin-api')();
 const client = require('./client');
 
 let nextTimer; // таймер поллинга
@@ -11,9 +11,14 @@ let waiting;   // Флаг ожидания завершения операци�
 let toWrite = []; // Массив команд на запись
 
 (async () => {
-  plugin.log('Plugin s7plc has started.', 0);
-
+ 
+  let plugin;
   try {
+    const opt = getOptFromArgs();
+    const pluginapi = opt && opt.pluginapi ? opt.pluginapi : 'ih-plugin-api';
+    plugin = require(pluginapi+'/index.js')();
+    plugin.log('Plugin s7plc has started.', 0);
+    
     plugin.params.data = await plugin.params.get();
     plugin.log('Received params data:' + util.inspect(plugin.params.data));
 
@@ -108,6 +113,17 @@ async function write() {
     plugin.log('Write ERROR: ' + util.inspect(e));
   }
 }
+
+function getOptFromArgs() {
+  let opt;
+  try {
+    opt = JSON.parse(process.argv[2]); //
+  } catch (e) {
+    opt = {};
+  }
+  return opt;
+}
+
 
 // Сообщения от сервера
 /**  act
