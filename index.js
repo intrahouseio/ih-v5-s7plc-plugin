@@ -9,10 +9,10 @@ const client = require('./client');
 let nextTimer; // таймер поллинга
 let waiting;   // Флаг ожидания завершения операции (содержит ts старта операции или 0)
 let toWrite = []; // Массив команд на запись
-
+let plugin;
 (async () => {
  
-  let plugin;
+  
   try {
     const opt = getOptFromArgs();
     const pluginapi = opt && opt.pluginapi ? opt.pluginapi : 'ih-plugin-api';
