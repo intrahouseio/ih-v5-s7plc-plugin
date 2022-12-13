@@ -1,7 +1,9 @@
 {
   "grid": [
     { "id": "p2", "xs": 6, "class": "main", "table": "devhard" },
-    { "id": "p3", "xs": 6, "class": "main", "table": "devhard" }
+    { "id": "p3", "xs": 6, "class": "main", "table": "devhard" },
+    { "id": "ptest", "xs": 6, "class": "main", "table": "devhard", "hide": "!data.p3.w" },
+    { "id": "p4", "xs": 6, "class": "main", "table": "devhard", "hide": "!data.p3.r" }
   ],
   "spacing": 4,
 
@@ -13,5 +15,21 @@
   "p3": [
     { "prop": "r", "title": "Read", "type": "cb" },
     { "prop": "w", "title": "Write", "type": "cb" }
+  ],
+  "ptest": [
+    { "prop": "header_testwrite", "title": "$header_testwrite", "type": "header" },
+    { "prop": "testValue", "title": "$testValue", "type": "input" },
+
+    {
+      "prop": "writeButton",
+      "title": "$doWrite",
+      "type": "button",
+      "command": "writetochannel",
+      "param": "write"
+    }
+    ],
+  "p4": [
+    { "prop": "realtime_chan_str", "title": "$realtime_chan_str", "type": "text" },
+    { "prop": "realtime_dev_str", "title": "$realtime_dev_str", "type": "text" }
   ]
 }

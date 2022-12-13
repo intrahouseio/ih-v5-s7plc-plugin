@@ -29,5 +29,20 @@
     "stopBits": "Stop bits",
 
     "actions":"Commands",
-    "action":"Command"
+    "action":"Command",
+    "header_testwrite": "Write test",
+    "testValue": "Write value",
+    "realtime_chan_str": "Channel",
+    "realtime_dev_str": "Device",
+    "realtime_chan_val" : "Channel: value",
+    "realtime_chan_ts" : "Channel: time",
+    "realtime_dev_val" : "Device: value",
+    "realtime_dev_ts" : "Device: time",
+    "realtime_dev_err" : "Device: error",
+    "name" : "ID",
+    "state" : "State",
+    "laststart" : "Start time",
+    "laststop" : "Stop time",
+    "uptime" : "Uptime",
+    "error" : "Error"
 }

@@ -30,5 +30,20 @@
     "stopBits": "Стоп-биты",
 
     "actions":"Команды",
-    "action":"Команда"
+    "action":"Команда",
+    "header_testwrite": "Тест записи",
+    "testValue": "Записать значение",
+    "realtime_chan_str": "Канал",
+    "realtime_dev_str": "Устройство",
+    "realtime_chan_val" : "Канал: значение",
+    "realtime_chan_ts" : "Канал: время",
+    "realtime_dev_val" : "Устройство: значение",
+    "realtime_dev_ts" : "Устройство: время",
+    "realtime_dev_err" : "Устройство: ошибка",
+    "name" : "ID",
+    "state" : "Состояние",
+    "laststart" : "Время запуска",
+    "laststop" : "Время останова",
+    "uptime" : "Время работы",
+    "error" : "Ошибка"
 }
