@@ -15,7 +15,7 @@ module.exports = {
   init(plugin) {
     this.plugin = plugin;
     if (plugin.params.data.useFakeS7) {
-      this.plugin.log('USE fake S7!');
+      this.plugin.log('USE fake S7!', 1);
 
       const S7 = require('./lib/fakeS7');
       this.conn = new S7(plugin);
@@ -32,11 +32,11 @@ module.exports = {
     variables = {};
     // Заполнить variables из каналов
     for (var i=0; i < channels.data.length; i++) {
-      variables[channels.data[i].id] = channels.data[i].address;
+      variables[channels.data[i].chan] = channels.data[i].address;
       // делаем что-нибудь с item
     }
     this.conn.setTranslationCB(tag => variables[tag]);  
-    this.plugin.log('Variables mapping: ' + util.inspect(variables));
+    //this.plugin.log('Variables mapping: ' + util.inspect(variables));
     // Заполнить read pool для readAll
     this.conn.addItems(Object.keys(variables));
   },

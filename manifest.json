@@ -4,6 +4,7 @@
   "single": 0,
   "restartOnChannelsChange": 0,
 
+  "innerId":1,
   "default_channel": {
     "r": 1,
     "chan": "VAR1",
