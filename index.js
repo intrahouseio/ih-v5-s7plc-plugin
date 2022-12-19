@@ -120,7 +120,7 @@ async function write() {
     toWrite = [];
     if (items.length >0 && values.length>0) {
       await client.write(items, values);
-      plugin.log('Write completed' + items + values, 1);
+      plugin.log('Write completed' + items + " " + values, 1);
     }
     
   } catch (e) {
@@ -164,7 +164,10 @@ plugin.channels.onChange(async function () {
     clearTimeout(nextTimer);
     client.removeItems();
     plugin.channels.data = await plugin.channels.get(); 
-    
+    channels = {};
+    plugin.channels.data.forEach(item => {
+      channels[item.chan] = item.id;
+    })
     client.addItems(plugin.channels);
     sendNext();
     } catch (e) {
