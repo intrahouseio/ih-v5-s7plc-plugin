@@ -27,7 +27,7 @@
     "parity": "Parity",
     "dataBits": "Data bits",
     "stopBits": "Stop bits",
-
+    "sendChanges": "Send Changes",
     "actions":"Commands",
     "action":"Command",
     "header_testwrite": "Write test",

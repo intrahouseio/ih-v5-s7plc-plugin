@@ -51,6 +51,12 @@
       "title": "$timeout",
       "type": "input",
       "default": "5000"
+    },
+    {
+      "prop" : "sendChanges",
+      "title": "$sendChanges",
+      "type": "cb",
+      "default": 0
     }
   ],
   "p3": [

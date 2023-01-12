@@ -85,11 +85,15 @@ async function read() {
     if (data) {
     Object.keys(data).forEach(key => {
         if (typeof chanValues[key] !== 'object') chanValues[key] = {}
-          value = data[key];
-        if (chanValues[key].value != value) {
+        value = data[key];
+        if (plugin.params.data.sendChanges) {
+          if (chanValues[key].value != value) {
+            res.push({ id: channels[key], value: value });
+            chanValues[key].value = value;
+          }
+        } else {
           res.push({ id: channels[key], value: value });
-          chanValues[key].value = value;
-        }
+        }  
       });
       if (res.length > 0) plugin.sendData(res);
     }
@@ -169,6 +173,7 @@ plugin.channels.onChange(async function () {
       channels[item.chan] = item.id;
     })
     client.addItems(plugin.channels);
+    chanValues = {};
     sendNext();
     } catch (e) {
       plugin.log('ERROR onChange: ' + util.inspect(e), 1);
