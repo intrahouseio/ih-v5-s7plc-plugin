@@ -9,7 +9,8 @@
 
   "p2": [
     { "prop": "title", "title": "Title", "type": "input" },
-    { "prop": "chan", "title": "Channel ID", "type": "input" },  
+    { "prop": "chan", "title": "Channel ID", "type": "input" },
+    { "prop": "devpropname", "title": "$devpropname", "type": "input" },  
     { "prop": "address", "title": "Address", "type": "input" }
   ],
 
