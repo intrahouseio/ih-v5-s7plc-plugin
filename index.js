@@ -88,17 +88,22 @@ async function read() {
         value = data[key];
         if (plugin.params.data.sendChanges) {
           if (chanValues[key].value != value) {
-            res.push({ id: channels[key], value: value });
+            res.push({ id: channels[key], value: value, chstatus: 0 });
             chanValues[key].value = value;
           }
         } else {
-          res.push({ id: channels[key], value: value });
+          res.push({ id: channels[key], value: value, chstatus: 0 });
         }  
       });
       if (res.length > 0) plugin.sendData(res);
     }
   } catch (e) {
     plugin.log('Read error: ' + util.inspect(e), 1);
+    let charr = []
+    Object.keys(channels).forEach(item => {
+      charr.push({ id: channels[item], chstatus: 1 });
+    })
+    plugin.sendData(charr);
   }
 }
 
