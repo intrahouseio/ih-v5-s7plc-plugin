@@ -12,14 +12,14 @@ let plugin;
 let chanValues = {};
 let channels = {};
 (async () => {
- 
-  
+
+
   try {
     const opt = getOptFromArgs();
     const pluginapi = opt && opt.pluginapi ? opt.pluginapi : 'ih-plugin-api';
-    plugin = require(pluginapi+'/index.js')();
+    plugin = require(pluginapi + '/index.js')();
     plugin.log('Plugin s7plc has started.', 1);
-    
+
     plugin.params.data = await plugin.params.get();
     plugin.log('Received params data:' + util.inspect(plugin.params.data), 1);
 
@@ -64,7 +64,7 @@ async function sendNext() {
     await read();
   }
   waiting = 0;
-  nextTimer = setTimeout(sendNext, nextDelay); 
+  nextTimer = setTimeout(sendNext, nextDelay);
 }
 
 /*  read
@@ -78,12 +78,13 @@ async function sendNext() {
 *     then it sends multiple packets at once, for maximum speed."
 */
 async function read() {
-  const res = [];
+  let res = [];
+  let arr = [];
   let value;
   try {
     const data = await client.readAll();
     if (data) {
-    Object.keys(data).forEach(key => {
+      Object.keys(data).forEach(key => {
         if (typeof chanValues[key] !== 'object') chanValues[key] = {}
         value = data[key];
         if (plugin.params.data.sendChanges) {
@@ -93,20 +94,36 @@ async function read() {
           }
         } else {
           res.push({ id: channels[key], value: value, chstatus: 0 });
-        }  
+        }
       });
       if (res.length > 0) plugin.sendData(res);
     }
   } catch (e) {
-    plugin.log('Read error: ' + util.inspect(e), 1);
-    let charr = []
-    Object.keys(channels).forEach(item => {
-      charr.push({ id: channels[item], chstatus: 1 });
-    })
-    plugin.sendData(charr);
+    plugin.log('Group Read error', 1);
+    for (let i = 0; i < plugin.channels.data.length; i++) {
+      res = [];
+      client.removeItems();
+      client.addItems([plugin.channels.data[i]]);
+      try {
+        const data = await client.readAll();
+        if (data) {
+          Object.keys(data).forEach(key => {
+
+            arr.push(plugin.channels.data[i]);
+            res.push({ id: channels[key], value: data[key], chstatus: 0 });
+
+          });
+        }
+      } catch (e) {
+        plugin.log('Read error: ' + util.inspect(plugin.channels.data[i].chan), 1);
+        res.push({ id: plugin.channels.data[i].id, chstatus: 1 });
+      }
+      if (res.length > 0) plugin.sendData(res);
+    }
+    client.removeItems();
+    client.addItems(arr);
   }
 }
-
 /*  write
 *   Отправляет команду записи на контроллер и ожидает завершения 
 *   Данные для отправки находятся в массиве toWrite = [{id, value}]
@@ -115,7 +132,7 @@ async function read() {
 *  Перед отправкой данные разделяются на массивы items = ['TEST1','TEST2'] и values = [42,1] 
 *   так как функция библиотеки writeItems(items, values) принимает 2 массива:
 *   "Writes items to the PLC using the corresponding values"
-
+ 
 *  Массив toWrite очищается
 */
 async function write() {
@@ -124,14 +141,14 @@ async function write() {
     const values = [];
     toWrite.forEach(item => {
       items.push(item.id);
-      values.push(item.value);  
+      values.push(item.value);
     });
     toWrite = [];
-    if (items.length >0 && values.length>0) {
+    if (items.length > 0 && values.length > 0) {
       await client.write(items, values);
       plugin.log('Write completed' + items + " " + values, 1);
     }
-    
+
   } catch (e) {
     plugin.log('Write ERROR: ' + util.inspect(e), 1);
   }
@@ -157,10 +174,10 @@ function getOptFromArgs() {
 plugin.onAct(message => {
   //console.log('Write recieve', message);
   plugin.log('ACT data=' + util.inspect(message.data), 1);
-  
+
   if (!message.data) return;
   message.data.forEach(item => {
-    toWrite.push({id:item.chan, value:item.value});
+    toWrite.push({ id: item.chan, value: item.value });
   });
   // Попытаться отправить на контроллер
   // Сбросить таймер поллинга, чтобы не случилось наложения
@@ -172,18 +189,18 @@ plugin.channels.onChange(async function () {
   try {
     clearTimeout(nextTimer);
     client.removeItems();
-    plugin.channels.data = await plugin.channels.get(); 
+    plugin.channels.data = await plugin.channels.get();
     channels = {};
     plugin.channels.data.forEach(item => {
       channels[item.chan] = item.id;
     })
-    client.addItems(plugin.channels);
+    client.addItems(plugin.channels.data);
     chanValues = {};
     sendNext();
-    } catch (e) {
-      plugin.log('ERROR onChange: ' + util.inspect(e), 1);
-    }
-  
+  } catch (e) {
+    plugin.log('ERROR onChange: ' + util.inspect(e), 1);
+  }
+
 });
 
 // Завершение работы

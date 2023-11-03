@@ -24,15 +24,16 @@ module.exports = {
       this.conn = new S7({silent:true });
     }
     
-    this.addItems(this.plugin.channels);
+    this.addItems(this.plugin.channels.data);
     
   },
+
 
   addItems(channels) {
     variables = {};
     // Заполнить variables из каналов
-    for (var i=0; i < channels.data.length; i++) {
-      variables[channels.data[i].chan] = channels.data[i].address;
+    for (var i=0; i < channels.length; i++) {
+      variables[channels[i].chan] = channels[i].address;
       // делаем что-нибудь с item
     }
     this.conn.setTranslationCB(tag => variables[tag]);  
