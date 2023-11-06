@@ -35,6 +35,11 @@ let channels = {};
 
     sendNext();
   } catch (err) {
+    let res = [];
+    Object.keys(channels).forEach(key => {
+      res.push({ id: channels[key], chstatus: 1, chan: key });
+    });
+    plugin.sendData(res);
     plugin.exit(8, util.inspect(err));
   }
 })();
@@ -89,37 +94,38 @@ async function read() {
         value = data[key];
         if (plugin.params.data.sendChanges) {
           if (chanValues[key].value != value) {
-            res.push({ id: channels[key], value: value, chstatus: 0 });
+            res.push({ id: channels[key], value: value, chstatus: 0, chan: key });
             chanValues[key].value = value;
           }
         } else {
-          res.push({ id: channels[key], value: value, chstatus: 0 });
+          res.push({ id: channels[key], value: value, chstatus: 0, chan: key });
         }
       });
       if (res.length > 0) plugin.sendData(res);
     }
   } catch (e) {
     plugin.log('Group Read error', 1);
+    res = [];
+    errres = [];
     for (let i = 0; i < plugin.channels.data.length; i++) {
-      res = [];
       client.removeItems();
       client.addItems([plugin.channels.data[i]]);
       try {
         const data = await client.readAll();
         if (data) {
           Object.keys(data).forEach(key => {
-
             arr.push(plugin.channels.data[i]);
-            res.push({ id: channels[key], value: data[key], chstatus: 0 });
-
+            res.push({ id: channels[key], value: data[key], chstatus: 0, chan: key });
           });
         }
       } catch (e) {
-        plugin.log('Read error: ' + util.inspect(plugin.channels.data[i].chan), 1);
-        res.push({ id: plugin.channels.data[i].id, chstatus: 1 });
+        plugin.log('Read error: ' + util.inspect(plugin.channels.data[i].chan), 0);
+        errres.push({ id: plugin.channels.data[i].id, chstatus: 1, chan: plugin.channels.data[i].chan });
       }
-      if (res.length > 0) plugin.sendData(res);
     }
+    if (res.length > 0) plugin.sendData(res);
+    if (errres.length > 0) plugin.sendData(errres);
+    if (errres.length == plugin.channels.data.length) plugin.exit(2, 'All ' + plugin.channels.data.length + ' tags are unavailable');
     client.removeItems();
     client.addItems(arr);
   }
