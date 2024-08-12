@@ -11,10 +11,12 @@ let variables = {};
 
 module.exports = {
   conn: '',
-
+  varChan: {},
+  variables: {},
   init(plugin) {
     this.plugin = plugin;
-    if (plugin.params.data.useFakeS7) {
+    this.conn = new S7({silent:true });
+    /*if (plugin.params.data.useFakeS7) {
       this.plugin.log('USE fake S7!', 1);
 
       const S7 = require('./lib/fakeS7');
@@ -25,29 +27,33 @@ module.exports = {
     }
     
     this.addItems(this.plugin.channels.data);
-    
+    */
   },
 
 
   addItems(channels) {
-    variables = {};
+    
     // Заполнить variables из каналов
     for (var i=0; i < channels.length; i++) {
-      variables[channels[i].chan] = channels[i].address;
+      this.variables[channels[i].id] = channels[i].address;
+      this.varChan[channels[i].id] = channels[i].chan;
       // делаем что-нибудь с item
     }
-    this.conn.setTranslationCB(tag => variables[tag]);  
+    this.conn.setTranslationCB(tag => this.variables[tag]);  
     //this.plugin.log('Variables mapping: ' + util.inspect(variables));
     // Заполнить read pool для readAll
-    this.conn.addItems(Object.keys(variables));
+    this.conn.addItems(Object.keys(this.variables));
+    return this.varChan;
   },
 
   removeItems() {
-    const vars = Object.keys(variables);
+    const vars = Object.keys(this.variables);
+   
     //console.log('Removed vars', vars);
     try {
     this.conn.removeItems(vars);
-    
+    this.varChan = {};
+    this.variables = {};
   } catch (e) {
     plugin.log('ERROR onChange: ' + util.inspect(e));
   }

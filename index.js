@@ -24,12 +24,10 @@ let channels = {};
     plugin.log('Received params data:' + util.inspect(plugin.params.data), 1);
 
     plugin.channels.data = await plugin.channels.get();
-    plugin.channels.data.forEach(item => {
-      channels[item.chan] = item.id;
-    })
     plugin.log('Received channels data: ' + util.inspect(plugin.channels.data), 1);
 
     client.init(plugin);
+    channels = client.addItems(plugin.channels.data);
     await client.connect();
     plugin.log('Connected!', 1);
 
@@ -37,7 +35,7 @@ let channels = {};
   } catch (err) {
     let res = [];
     Object.keys(channels).forEach(key => {
-      res.push({ id: channels[key], chstatus: 1, chan: key });
+      res.push({ id: key, chstatus: 1, title: channels[key] });
     });
     plugin.sendData(res);
     plugin.exit(8, util.inspect(err));
@@ -94,11 +92,11 @@ async function read() {
         value = data[key];
         if (plugin.params.data.sendChanges) {
           if (chanValues[key].value != value) {
-            res.push({ id: channels[key], value: value, chstatus: 0, chan: key });
+            res.push({ id: key, value: value, chstatus: 0, title: channels[key] });
             chanValues[key].value = value;
           }
         } else {
-          res.push({ id: channels[key], value: value, chstatus: 0, chan: key });
+          res.push({ id: key, value: value, chstatus: 0, title: channels[key] });
         }
       });
       if (res.length > 0) plugin.sendData(res);
@@ -109,25 +107,25 @@ async function read() {
     errres = [];
     for (let i = 0; i < plugin.channels.data.length; i++) {
       client.removeItems();
-      client.addItems([plugin.channels.data[i]]);
+      channels = client.addItems([plugin.channels.data[i]]);
       try {
         const data = await client.readAll();
         if (data) {
           Object.keys(data).forEach(key => {
             arr.push(plugin.channels.data[i]);
-            res.push({ id: channels[key], value: data[key], chstatus: 0, chan: key });
+            res.push({ id: key, value: data[key], chstatus: 0, title: channels[key] });
           });
         }
       } catch (e) {
         plugin.log('Read error: ' + util.inspect(plugin.channels.data[i].chan), 0);
-        errres.push({ id: plugin.channels.data[i].id, chstatus: 1, chan: plugin.channels.data[i].chan });
+        errres.push({ id: plugin.channels.data[i].id, chstatus: 1, title: plugin.channels.data[i].chan });
       }
     }
     if (res.length > 0) plugin.sendData(res);
     if (errres.length > 0) plugin.sendData(errres);
     if (errres.length == plugin.channels.data.length) plugin.exit(2, 'All ' + plugin.channels.data.length + ' tags are unavailable');
     client.removeItems();
-    client.addItems(arr);
+    channels = client.addItems(arr);
   }
 }
 /*  write
@@ -152,7 +150,7 @@ async function write() {
     toWrite = [];
     if (items.length > 0 && values.length > 0) {
       await client.write(items, values);
-      plugin.log('Write completed' + items + " " + values, 1);
+      plugin.log('Write completed ' + items + " " + values, 1);
     }
 
   } catch (e) {
@@ -183,7 +181,7 @@ plugin.onAct(message => {
 
   if (!message.data) return;
   message.data.forEach(item => {
-    toWrite.push({ id: item.chan, value: item.value });
+    toWrite.push({ id: item.id, value: item.value });
   });
   // Попытаться отправить на контроллер
   // Сбросить таймер поллинга, чтобы не случилось наложения
@@ -191,16 +189,13 @@ plugin.onAct(message => {
   sendNext();
 });
 
-plugin.channels.onChange(async function () {
+plugin.channels.onChange(async function (data) {
   try {
     clearTimeout(nextTimer);
     client.removeItems();
     plugin.channels.data = await plugin.channels.get();
     channels = {};
-    plugin.channels.data.forEach(item => {
-      channels[item.chan] = item.id;
-    })
-    client.addItems(plugin.channels.data);
+    channels = client.addItems(plugin.channels.data);
     chanValues = {};
     sendNext();
   } catch (e) {
