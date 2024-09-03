@@ -38,7 +38,8 @@ let channels = {};
       res.push({ id: key, chstatus: 1, title: channels[key] });
     });
     plugin.sendData(res);
-    plugin.exit(8, util.inspect(err));
+    plugin.log("err " +  util.inspect(err));
+    plugin.exit(8);
   }
 })();
 
