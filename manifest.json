@@ -6,6 +6,25 @@
 
   "innerId":1,
   "linkChstatus":1,
+  "share_node_folder_fields":["nodename", "r"],
+
+  "channel_folder_popup": {
+    "add": [
+      { "id": "channel_folder", "title": "$NewFolder" },
+      { "id": "channel_node_folder", "title": "$NewNode" },
+      { "id": "channel", "title": "$NewChannel" }
+    ],
+    "browse": { "variant": "subtree" },
+    "copypaste": true,
+    "delete": true
+  },
+
+  "default_channel_node_folder": {
+    "chan" : "Новый узел",
+    "foldertype": "node",
+    "r": 1,
+    "nodename": "DB1"
+  },
   "default_channel": {
     "r": 1,
     "chan": "VAR1",

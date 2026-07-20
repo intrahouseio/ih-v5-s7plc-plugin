@@ -35,8 +35,15 @@ module.exports = {
     
     // Заполнить variables из каналов
     for (var i=0; i < channels.length; i++) {
-      this.variables[channels[i].id] = channels[i].address;
-      this.varChan[channels[i].id] = channels[i].chan;
+      if (channels[i].nodename) {
+        this.variables[channels[i].id] = channels[i].nodename + "," + channels[i].address;
+        this.varChan[channels[i].id] = channels[i].nodename + "_" +channels[i].chan;
+      } else {
+        this.variables[channels[i].id] = channels[i].address;
+        this.varChan[channels[i].id] = channels[i].chan;
+      }
+      
+      
       // делаем что-нибудь с item
     }
     this.conn.setTranslationCB(tag => this.variables[tag]);  

@@ -45,5 +45,7 @@
     "laststop" : "Stop time",
     "uptime" : "Uptime",
     "error" : "Error",
-    "devpropname" : "Property to bind"
+    "devpropname" : "Property to bind",
+    "nodename": "DB structure name Tag",
+    "activate": "Activate"
 }
