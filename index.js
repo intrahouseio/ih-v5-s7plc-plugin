@@ -11,6 +11,9 @@ let toWrite = []; // Массив команд на запись
 let plugin;
 let chanValues = {};
 let channels = {};
+
+
+const sleep = ms => new Promise(resolve => nextTimer = setTimeout(resolve, ms));
 (async () => {
 
 
@@ -23,22 +26,26 @@ let channels = {};
     plugin.params.data = await plugin.params.get();
     plugin.log('Received params data:' + util.inspect(plugin.params.data), 1);
 
-    plugin.channels.data = await plugin.channels.get();
-    plugin.log('Received channels data: ' + util.inspect(plugin.channels.data), 1);
+    channels = await plugin.channels.get();
+    plugin.log('Received channels data: ' + util.inspect(channels), 1);
 
     client.init(plugin);
-    channels = client.addItems(plugin.channels.data);
+    const groups = client.createGroups(channels);
+
+    //const firstGroup = client.getNextGroup();
+    //
+    //channels = client.addItemsForGroup(firstGroup || []);  
     await client.connect();
     plugin.log('Connected!', 1);
 
     sendNext();
   } catch (err) {
     let res = [];
-    Object.keys(channels).forEach(key => {
-      res.push({ id: key, chstatus: 1, title: channels[key] });
+    channels.forEach(ch => {
+      res.push({ id: ch.id, chstatus: 1, title: ch.chan });
     });
     plugin.sendData(res);
-    plugin.log("err " +  util.inspect(err));
+    plugin.log("err " + util.inspect(err));
     plugin.exit(8);
   }
 })();
@@ -83,51 +90,91 @@ async function sendNext() {
 */
 async function read() {
   let res = [];
-  let arr = [];
-  let value;
+  const currentSuperGroup = client.getNextGroup();
   try {
+    // ← берём следующую супергруппу
+    if (!currentSuperGroup) return;
+    client.removeItems();                          // ← чистим предыдущие
+    channels = client.addItemsForGroup(currentSuperGroup);  // ← добавляем новые
     const data = await client.readAll();
+    //plugin.log("data " + util.inspect(data))
     if (data) {
       Object.keys(data).forEach(key => {
-        if (typeof chanValues[key] !== 'object') chanValues[key] = {}
-        value = data[key];
+        if (typeof chanValues[key] !== 'object') chanValues[key] = {};
+        const value = data[key];
+
         if (plugin.params.data.sendChanges) {
           if (chanValues[key].value != value) {
-            res.push({ id: key, value: value, chstatus: 0, title: channels[key] });
+            res.push({ id: key, value, chstatus: 0, title: channels[key] });
             chanValues[key].value = value;
+            chanValues[key].status = 0;
           }
         } else {
-          res.push({ id: key, value: value, chstatus: 0, title: channels[key] });
+          res.push({ id: key, value, chstatus: 0, title: channels[key] });
+          chanValues[key].status = 0;
         }
       });
-      if (res.length > 0) plugin.sendData(res);
     }
+
+    if (res.length > 0) plugin.sendData(res);
   } catch (e) {
-    plugin.log('Group Read error', 1);
-    res = [];
-    errres = [];
-    for (let i = 0; i < plugin.channels.data.length; i++) {
-      client.removeItems();
-      channels = client.addItems([plugin.channels.data[i]]);
+    plugin.log('Read error in supergroup: ' + util.inspect(e), 1);
+
+    await readGroupIndividually(currentSuperGroup, res);
+  }
+}
+/**
+ * Поштучное чтение группы с исключением плохих адресов
+ */
+async function readGroupIndividually(superGroup, res) {
+  plugin.log("1")
+  if (!superGroup) return;
+
+  for (const nodenameGroup of superGroup) {
+    for (const id of Object.keys(nodenameGroup.variables)) {
       try {
+        client.removeItems();
+
+        // Формируем минимальную группу для одного тега
+        const singleGroup = [{
+          variables: { [id]: nodenameGroup.variables[id] },
+          varChan: { [id]: nodenameGroup.varChan[id] }
+        }];
+        plugin.log("singleGroup " + util.inspect(singleGroup))
+        channels = client.addItemsForGroup(singleGroup);
+
         const data = await client.readAll();
-        if (data) {
-          Object.keys(data).forEach(key => {
-            arr.push(plugin.channels.data[i]);
-            res.push({ id: key, value: data[key], chstatus: 0, title: channels[key] });
-          });
+
+        if (data && data[id] !== undefined) {
+          const value = data[id];
+          if (typeof chanValues[id] !== 'object') chanValues[id] = {};
+
+          if (plugin.params.data.sendChanges) {
+            if (chanValues[id].value != value) {
+              res.push({ id, value, chstatus: 0, title: channels[id] });
+              chanValues[id].value = value;
+            }
+          } else {
+            res.push({ id, value, chstatus: 0, title: channels[id] });
+          }
+          chanValues[id].status = 0;
         }
       } catch (e) {
-        plugin.log('Read error: ' + util.inspect(plugin.channels.data[i].chan), 0);
-        errres.push({ id: plugin.channels.data[i].id, chstatus: 1, title: plugin.channels.data[i].chan });
+        // ← добавляем в blacklist
+        plugin.log(`Bad tag ${id} - added to blacklist`, 1);
+
+        client.badTags.add(id);
+
+        if (typeof chanValues[id] !== 'object') chanValues[id] = {};
+        chanValues[id].status = 1;
+
+        res.push({ id, chstatus: 1, title: channels[id] || id });
+
       }
     }
-    if (res.length > 0) plugin.sendData(res);
-    if (errres.length > 0) plugin.sendData(errres);
-    if (errres.length == plugin.channels.data.length) plugin.exit(2, 'All ' + plugin.channels.data.length + ' tags are unavailable');
-    client.removeItems();
-    channels = client.addItems(arr);
   }
+
+  if (res.length > 0) plugin.sendData(res);
 }
 /*  write
 *   Отправляет команду записи на контроллер и ожидает завершения 
@@ -142,20 +189,40 @@ async function read() {
 */
 async function write() {
   try {
+    if (toWrite.length === 0) return;
+
     const items = [];
     const values = [];
+    const writeVariables = {};
+
     toWrite.forEach(item => {
       items.push(item.id);
       values.push(item.value);
+
+      let addr = item.address || '';
+      if (item.nodename) {
+        addr = item.nodename + "," + addr;
+      }
+      writeVariables[item.id] = addr;
     });
+
+    const pending = [...toWrite];
     toWrite = [];
-    if (items.length > 0 && values.length > 0) {
-      await client.write(items, values);
-      plugin.log('Write completed ' + items + " " + values, 1);
-    }
+
+    // Подготовка к записи
+    client.removeItems();
+    client.variables = writeVariables;
+    client.conn.setTranslationCB(tag => client.variables[tag]);
+    client.conn.addItems(items);
+
+    await client.write(items, values);
+
+    plugin.log('Write completed: ' + items.join(',') + " = " + values.join(','), 1);
 
   } catch (e) {
     plugin.log('Write ERROR: ' + util.inspect(e), 1);
+  } finally {
+    client.removeItems();   // обязательно чистим после записи
   }
 }
 
@@ -182,23 +249,23 @@ plugin.onAct(message => {
 
   if (!message.data) return;
   message.data.forEach(item => {
-    toWrite.push({ id: item.id, value: item.value });
+    toWrite.push({ id: item.id, value: item.value, address: item.address, nodename: item.nodename });
   });
   // Попытаться отправить на контроллер
   // Сбросить таймер поллинга, чтобы не случилось наложения
-  clearTimeout(nextTimer);
-  sendNext();
+  //clearTimeout(nextTimer);
+  //sendNext();
 });
 
 plugin.channels.onChange(async function (data) {
   try {
-    clearTimeout(nextTimer);
-    client.removeItems();
-    plugin.channels.data = await plugin.channels.get();
-    channels = {};
-    channels = client.addItems(plugin.channels.data);
+    //clearTimeout(nextTimer);
+    //client.removeItems();
+    channels = await plugin.channels.get();
+    client.createGroups(channels);
+    //channels = client.addItems(plugin.channels.data);
     chanValues = {};
-    sendNext();
+    //sendNext();
   } catch (e) {
     plugin.log('ERROR onChange: ' + util.inspect(e), 1);
   }

@@ -52,6 +52,12 @@
       "type": "input",
       "default": "5000"
     },
+     {
+      "prop": "maxGroupsPerRead",
+      "title": "$maxGroupsPerRead",
+      "type": "input",
+      "default": "8"
+    },
     {
       "prop" : "sendChanges",
       "title": "$sendChanges",

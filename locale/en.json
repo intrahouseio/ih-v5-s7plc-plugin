@@ -47,5 +47,6 @@
     "error" : "Error",
     "devpropname" : "Property to bind",
     "nodename": "DB structure name Tag",
-    "activate": "Activate"
+    "activate": "Activate",
+    "maxGroupsPerRead" : "Max groups per read"
 }
