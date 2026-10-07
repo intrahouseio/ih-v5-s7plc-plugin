@@ -38,7 +38,18 @@
    
   ],
   "p2": [
-    
+     {
+      "prop": "maxPDU",
+      "title": "$maxPDU",
+      "type": "input",
+      "default": "240"
+    },
+    {
+      "prop": "maxParallel",
+      "title": "$maxParallel",
+      "type": "input",
+      "default": "8"
+    },
     {
       "prop": "polldelay",
       "title": "$polldelay",
