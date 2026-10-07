@@ -15,7 +15,10 @@ module.exports = {
   variables: {},
   init(plugin) {
     this.plugin = plugin;
-    this.conn = new S7({silent:true, maxPDU:this.plugin.params.data.maxPDU, maxParallel: this.plugin.params.data.maxPDU.maxParallel});
+    this.conn = new S7({silent:true, 
+      maxPDU: Number(this.plugin.params.data.maxPDU) || 240, 
+      maxParallel: Number(this.plugin.params.data.maxParallel) || 8 
+    });
     /*if (plugin.params.data.useFakeS7) {
       this.plugin.log('USE fake S7!', 1);
 
